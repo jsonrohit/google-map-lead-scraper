@@ -14,6 +14,3 @@ def get_llm():
     )
     
     return llm
-
-    # result = chain.invoke({"input": description})
-    # print(json.dumps(result, indent=2))
