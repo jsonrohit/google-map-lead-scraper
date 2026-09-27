@@ -52,4 +52,3 @@ customizable aesthetics, exceptional thermal stability, and intuitive operation 
 depending on the retailer and customization options."""
 
 parse_product(description)
-
