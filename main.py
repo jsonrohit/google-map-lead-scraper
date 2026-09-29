@@ -18,8 +18,9 @@ llm = get_llm()
 tools_by_name = {tool.name: tool for tool in [search_place]}
 
 llm_with_tools =llm.bind_tools([search_place])
-response = llm_with_tools.invoke('delhi')
-print("Result for 'delhi':", f"{response.tool_calls}")
+user_input = input("Press Enter to continue...")
+response = llm_with_tools.invoke(user_input)
+print("Result for user input:", f"{response.tool_calls}")
 
 for tool_call in response.tool_calls:
     tool = tools_by_name[tool_call["name"]]
