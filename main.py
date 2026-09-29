@@ -9,9 +9,6 @@ from app.tools.search_place import search_place
 load_dotenv()
 
 
-
-
-
 # Initialize LLM
 llm = get_llm()
 
