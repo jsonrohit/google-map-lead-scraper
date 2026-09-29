@@ -1,10 +1,13 @@
 import os
 from dotenv import load_dotenv
 import requests
+from langchain_core.tools import tool
 
 load_dotenv()
 
-def search_place(query):
+@tool
+def search_place(query: str):
+    '''Search for a place using the Serper API and return the JSON response.'''
     API_KEY = os.getenv("SERPER_API_KEY")
 
     headers = {
