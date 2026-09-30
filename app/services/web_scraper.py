@@ -102,7 +102,7 @@ def add_unique(items, new_items):
 
 def scrape_website(url):
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(headless=True, args=["--disable-http2"])
 
         page = browser.new_page()
 
@@ -110,11 +110,21 @@ def scrape_website(url):
             # Make sure the URL is absolute
             url = urljoin(url, "/")
 
-            page.goto(
-                url,
-                wait_until="domcontentloaded",
-                timeout=30000
-            )
+            try:
+                page.goto(
+                    url,
+                    wait_until="domcontentloaded",
+                    timeout=30000
+                )
+            except Exception as e:
+                print(f"Could not load website {url}: {e}")
+                return {
+                    "emails": [],
+                    "phones": [],
+                    "social_media": {},
+                    "contact_page": None,
+                    "about_page": None,
+                }
 
             data = extract_data(page)
 

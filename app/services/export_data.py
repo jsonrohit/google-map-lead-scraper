@@ -9,9 +9,15 @@ def _flatten_scraped_item(item: Dict[str, Any]) -> Dict[str, Any]:
     """
     Flattens a single scraped data dict into a row suitable for Excel export.
     """
-    emails = item.get("emails", []) or []
-    phones = item.get("phones", []) or []
+    emails = item.get("emails") or item.get("email") or []
+    phones = item.get("phones") or item.get("phone") or []
     social_media = item.get("social_media", {}) or {}
+
+    if isinstance(emails, str):
+        emails = [emails]
+    if isinstance(phones, str):
+        phones = [phones]
+
     if isinstance(social_media, dict):
         social_media_links = ", ".join(
             str(url) for url in social_media.values() if url
