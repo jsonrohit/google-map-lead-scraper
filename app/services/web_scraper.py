@@ -21,73 +21,6 @@ SOCIAL_DOMAINS = [
     "tiktok.com",
 ]
 
-
-def scrape_website(url = "https://ams1.13sqft.com"):
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-
-        page = browser.new_page()
-
-        try:
-            # Make sure the URL is absolute
-            url = urljoin(url, "/")
-
-            page.goto(
-                url,
-                wait_until="domcontentloaded",
-                timeout=30000
-            )
-
-            data = extract_data(page)
-
-            # -------------------------
-            # Contact page
-            # -------------------------
-            if data["contact_page"]:
-                try:
-                    page.goto(
-                        data["contact_page"],
-                        wait_until="domcontentloaded",
-                        timeout=30000
-                    )
-
-                    contact_text = page.locator("body").inner_text()
-
-                    data["emails"] = add_unique(
-                        data["emails"],
-                        EMAIL_RE.findall(contact_text)
-                    )
-
-                    data["phones"] = add_unique(
-                        data["phones"],
-                        PHONE_RE.findall(contact_text)
-                    )
-
-                except Exception as e:
-                    print(f"Could not scrape contact page: {e}")
-
-            # -------------------------
-            # About page
-            # -------------------------
-            # if data["about_page"]:
-            #     try:
-            #         page.goto(
-            #             data["about_page"],
-            #             wait_until="domcontentloaded",
-            #             timeout=30000
-            #         )
-
-            #         data["about"] = page.locator("body").inner_text()
-
-                except Exception as e:
-                    print(f"Could not scrape about page: {e}")
-            print(f"Scraped data: {data}")
-            return data
-
-        finally:
-            browser.close()
-scrape_website()
-
 def extract_links(page):
     return page.locator("a").evaluate_all("""
         els => els.map(a => ({
@@ -165,3 +98,69 @@ def extract_data(page):
 def add_unique(items, new_items):
     items.extend(new_items)
     return sorted(set(items))
+
+
+def scrape_website(url):
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+
+        page = browser.new_page()
+
+        try:
+            # Make sure the URL is absolute
+            url = urljoin(url, "/")
+
+            page.goto(
+                url,
+                wait_until="domcontentloaded",
+                timeout=30000
+            )
+
+            data = extract_data(page)
+
+            # -------------------------
+            # Contact page
+            # -------------------------
+            if data["contact_page"]:
+                try:
+                    page.goto(
+                        data["contact_page"],
+                        wait_until="domcontentloaded",
+                        timeout=30000
+                    )
+
+                    contact_text = page.locator("body").inner_text()
+
+                    data["emails"] = add_unique(
+                        data["emails"],
+                        EMAIL_RE.findall(contact_text)
+                    )
+
+                    data["phones"] = add_unique(
+                        data["phones"],
+                        PHONE_RE.findall(contact_text)
+                    )
+
+                except Exception as e:
+                    print(f"Could not scrape contact page: {e}")
+
+            # -------------------------
+            # About page
+            # -------------------------
+            # if data["about_page"]:
+            #     try:
+            #         page.goto(
+            #             data["about_page"],
+            #             wait_until="domcontentloaded",
+            #             timeout=30000
+            #         )
+
+            #         data["about"] = page.locator("body").inner_text()
+
+                except Exception as e:
+                    print(f"Could not scrape about page: {e}")
+            print(f"Scraped data: {data}")
+            return data
+
+        finally:
+            browser.close()

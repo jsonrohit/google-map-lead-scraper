@@ -19,5 +19,5 @@ def search_place(query: str):
         "q": query
     }
 
-    response = requests.post("https://google.serper.dev/search", headers=headers, json=payload)
+    response = requests.post("https://google.serper.dev/places", headers=headers, json=payload)
     return response.json()

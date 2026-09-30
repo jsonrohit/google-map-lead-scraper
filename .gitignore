@@ -35,3 +35,8 @@ Thumbs.db
 # audio Files
 *.wav
 *.mp3
+
+# Files
+*.txt
+*.csv
+*.xlsx
