@@ -12,10 +12,22 @@ def _flatten_scraped_item(item: Dict[str, Any]) -> Dict[str, Any]:
     emails = item.get("emails", []) or []
     phones = item.get("phones", []) or []
     social_media = item.get("social_media", {}) or {}
+    if isinstance(social_media, dict):
+        social_media_links = ", ".join(
+            str(url) for url in social_media.values() if url
+        )
+    elif isinstance(social_media, str):
+        social_media_links = social_media
+        social_media = {}
+    else:
+        social_media_links = ""
+        social_media = {}
 
     return {
+        "Business Name": item.get("name", ""),
         "Emails": ", ".join(emails),
         "Phones": ", ".join(phones),
+        "Social Media": social_media_links,
         "Facebook": social_media.get("facebook.com", ""),
         "Twitter/X": social_media.get("x.com", ""),
         "LinkedIn": social_media.get("linkedin.com", ""),
@@ -40,8 +52,10 @@ def generate_excel_from_scraped_data(data: List[Dict[str, Any]]) -> io.BytesIO:
     sheet.title = "Scraped Leads"
 
     headers = [
+        "Business Name",
         "Emails",
         "Phones",
+        "Social Media",
         "Facebook",
         "Twitter/X",
         "LinkedIn",
