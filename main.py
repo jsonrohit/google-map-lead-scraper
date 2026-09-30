@@ -5,6 +5,8 @@ import json
 from dotenv import load_dotenv
 from app.models.llm import get_llm
 from app.tools.search_place import search_place
+from app.services.web_scraper import scrape_website
+from app.services.export_data import generate_excel_from_scraped_data
 
 load_dotenv()
 
@@ -19,54 +21,37 @@ user_input = input("Press Enter to continue...")
 response = llm_with_tools.invoke(user_input)
 print("Result for user input:", f"{response.tool_calls}")
 
+scraped_records = []
+
 for tool_call in response.tool_calls:
     tool = tools_by_name[tool_call["name"]]
     print(f"Invoking tool '{tool_call['name']}' with arguments:", f"{tool_call['args']}")
 
     result = tool.invoke(tool_call["args"])
 
-    print(f"Result for tool '{tool_call['name']}':", f"{result}")
+    # scrape_website
+    # if "website" in result and result["website"]:
+    #     scrape_result = scrape_website(result["website"])
+    #     print(f"Scraped data from {result['website']}: {scrape_result}")
 
+    places = result.get("places", [])
+    for place in places:
+        # print(f"Place: {place.get('title', 'Unknown')}")
+        for key, value in place.items():
+            # print(f"  {key}: {value}")
+            if key == "website" and value:
+                scrape_result = scrape_website(value)
+                scraped_records.append(scrape_result)
 
+                print(f"    Found website URL: {value}")
+                print(f"    Scraped data from {value}: {scrape_result}")
 
+if scraped_records:
+    excel_buffer = generate_excel_from_scraped_data(scraped_records)
+    output_file = "scraped_leads.xlsx"
+    with open(output_file, "wb") as excel_file:
+        excel_file.write(excel_buffer.getvalue())
+    print(f"Excel sheet saved to: {output_file}")
+else:
+    print("No website data was scraped; no Excel sheet was created.")
 
-# # Define the expected JSON structure
-# parser = JsonOutputParser(pydantic_object={
-#     "type": "object",
-#     "properties": {
-#         "name": {"type": "string"},
-#         "price": {"type": "number"},
-#         "features": {
-#             "type": "array",
-#             "items": {"type": "string"}
-#         }
-#     }
-# })
-
-# # Create a simple prompt
-# prompt = ChatPromptTemplate.from_messages([
-#     ("system", """Extract product details into JSON with this structure:
-#         {{
-#             "name": "product name here",
-#             "price": number_here_without_currency_symbol,
-#             "features": ["feature1", "feature2", "feature3"]
-#         }}"""),
-#     ("user", "{input}")
-# ])
-
-# # Create the chain that guarantees JSON output
-# chain = prompt | llm | parser
-
-# def parse_product(description: str) -> dict:
-#     result = chain.invoke({"input": description})
-#     print(json.dumps(result, indent=2))
-
-        
-# # Example usage
-# description = """The Kees Van Der Westen Speedster is a high-end, single-group espresso machine known for its precision, performance, 
-# and industrial design. Handcrafted in the Netherlands, it features dual boilers for brewing and steaming, PID temperature control for 
-# consistency, and a unique pre-infusion system to enhance flavor extraction. Designed for enthusiasts and professionals, it offers 
-# customizable aesthetics, exceptional thermal stability, and intuitive operation via a lever system. The pricing is approximatelyt $14,499 
-# depending on the retailer and customization options."""
-
-# parse_product(description)
