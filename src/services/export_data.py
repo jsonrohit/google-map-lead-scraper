@@ -1,4 +1,5 @@
 import io
+import os
 from typing import List, Dict, Any
 import openpyxl
 from openpyxl.utils import get_column_letter
@@ -90,13 +91,19 @@ def generate_excel_from_scraped_data(data: List[Dict[str, Any]]) -> io.BytesIO:
     return buffer
 
 
+# Resolve to <project_root>/src/data regardless of the current working directory
+DATA_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data"
+)
+
+
 def export_scraped_data_as_excel_response(
     data: List[Dict[str, Any]],
     filename: str = "scraped_leads.xlsx",
 ) -> StreamingResponse:
     """
-    Generates an Excel file from scraped data and returns it as a downloadable
-    FastAPI StreamingResponse.
+    Generates an Excel file from scraped data, saves it into the data folder,
+    and returns it as a downloadable FastAPI StreamingResponse.
 
     Args:
         data: List of scraped data dictionaries.
@@ -106,6 +113,11 @@ def export_scraped_data_as_excel_response(
         StreamingResponse with appropriate headers to trigger a file download.
     """
     buffer = generate_excel_from_scraped_data(data)
+
+    os.makedirs(DATA_DIR, exist_ok=True)
+    with open(os.path.join(DATA_DIR, filename), "wb") as f:
+        f.write(buffer.getvalue())
+    buffer.seek(0)
 
     headers = {
         "Content-Disposition": f'attachment; filename="{filename}"'

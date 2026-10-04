@@ -3,11 +3,12 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.output_parsers import JsonOutputParser
 import json
+import os
 from dotenv import load_dotenv
-from app.models.llm import get_llm
-from app.tools.search_place import search_place
-from app.services.web_scraper import scrape_website
-from app.services.export_data import generate_excel_from_scraped_data
+from src.models.llm import get_llm
+from src.tools.search_place import search_place
+from src.services.web_scraper import scrape_website
+from src.services.export_data import DATA_DIR, generate_excel_from_scraped_data
 
 load_dotenv()
 
@@ -86,7 +87,8 @@ if scraped_records:
     print(f"LLM response for scraped records:\n{readable_response}")
 
     excel_buffer = generate_excel_from_scraped_data(json.loads(readable_response))
-    output_file = "scraped_leads.xlsx"
+    os.makedirs(DATA_DIR, exist_ok=True)
+    output_file = os.path.join(DATA_DIR, "scraped_leads.xlsx")
     with open(output_file, "wb") as excel_file:
         excel_file.write(excel_buffer.getvalue())
     print(f"Excel sheet saved to: {output_file}")
