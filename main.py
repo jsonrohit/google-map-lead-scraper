@@ -4,11 +4,13 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.output_parsers import JsonOutputParser
 import json
 import os
+from datetime import datetime
 from dotenv import load_dotenv
 from src.models.llm import get_llm
 from src.tools.search_place import search_place
 from src.services.web_scraper import scrape_website
 from src.services.export_data import DATA_DIR, generate_excel_from_scraped_data
+from src.prompts.templates import data_formatter_template
 
 load_dotenv()
 
@@ -50,31 +52,7 @@ for tool_call in response.tool_calls:
                 print(f"scrape result:\n{readable_response}")
 
 if scraped_records:
-    prompt =SystemMessage(content="""
-                    You are a lead-generation data formatter. Use only the supplied scraped records.
-
-                    Return the results ONLY as a valid JSON array. Each business must be an object with exactly these fields:
-                    - name
-                    - phone
-                    - website
-                    - address
-                    - email
-                    - social_media
-
-                    Example format:
-                    [
-                    {
-                        "name": "business name",
-                        "phone": "contact number",
-                        "website": "https://businesswebsite.com",
-                        "address": "Delhi",
-                        "email": "contact@business.com",
-                        "social_media": "https://socialmedia.com/business"
-                    }
-                    ]
-
-                    Do not add markdown, explanations, comments, or any other fields. If a field is unavailable, use null.
-                    """)
+    prompt = SystemMessage(content=data_formatter_template())
     response = llm.invoke([
         prompt,
         HumanMessage(content=json.dumps(scraped_records, indent=2)),
@@ -88,7 +66,7 @@ if scraped_records:
 
     excel_buffer = generate_excel_from_scraped_data(json.loads(readable_response))
     os.makedirs(DATA_DIR, exist_ok=True)
-    output_file = os.path.join(DATA_DIR, "scraped_leads.xlsx")
+    output_file = os.path.join(DATA_DIR, "scraped_leads." + datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".xlsx")
     with open(output_file, "wb") as excel_file:
         excel_file.write(excel_buffer.getvalue())
     print(f"Excel sheet saved to: {output_file}")
